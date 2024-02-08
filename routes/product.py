@@ -99,9 +99,9 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
 
 
 @products_router.put("/{product_code}",
-                     response_model=schemas.ProductBase,
+                     response_model=schemas.Product,
                      description="Update a product by Id")
-def update_product_by_id(product_code: str, product: schemas.ProductBase, db: Session = Depends(get_db)):
+def update_product_by_id(product_code: str, product: schemas.ProductUpdate, db: Session = Depends(get_db)):
     """
     Update an existing product by Id.
 

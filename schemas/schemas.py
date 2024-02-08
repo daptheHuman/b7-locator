@@ -1,20 +1,25 @@
 from datetime import date, datetime
+from re import L
 from typing import List, Optional
 from pydantic import BaseModel
 
 
 class ProductBase(BaseModel):
-    product_code: str
     product_name: str
     shelf_life: float
 
 
 class ProductCreate(ProductBase):
+    product_code: str
+    pass
+
+
+class ProductUpdate(ProductBase):
     pass
 
 
 class Product(ProductBase):
-    pass
+    product_code: str
 
     class Config:
         from_attributes = True
@@ -30,6 +35,7 @@ class SampleRetainedBase(BaseModel):
     manufacturing_date: date
     expiration_date: date
     destroy_date: date
+    rack_id: str | None
 
 
 class SampleRetainedCreate(SampleRetainedBase):
@@ -38,24 +44,25 @@ class SampleRetainedCreate(SampleRetainedBase):
 
 class SampleRetained(SampleRetainedBase):
     id: int
-    rack_id: str | None
 
     class Config:
         from_attributes = True
 
 
 class RackBase(BaseModel):
-    rack_id: str
     location: str
 
 
 class RackCreate(RackBase):
-    pass
+    rack_id: str
+
+
+class RackUpdate(RackBase):
+    location: str
 
 
 class Rack(RackBase):
-    id: int
-    products: Optional[list[Product]] = []
+    rack_id: str
 
     class Config:
         from_attributes = True
