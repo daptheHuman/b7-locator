@@ -1,6 +1,7 @@
 import json
+
 from config.db import SessionLocal
-from models.models import Product, Rack, SampleRetained
+from models.models import SampleReferenced
 
 
 def seed_data(json_file, model):
@@ -24,10 +25,13 @@ def seed_data(json_file, model):
 
 if __name__ == "__main__":
     # Seed products
-    seed_data("products.json", Product)
+    # seed_data("products.json", Product)
 
-    # Seed racks
-    seed_data("racks.json", Rack)
+    # # Seed racks
+    # seed_data("racks.json", Rack)
 
-    # Seed samples_retained
-    seed_data("samples_retained.json", SampleRetained)
+    # # Seed samples_retained
+    # seed_data("samples_retained.json", SampleRetained)
+
+    # Seed samples_referenced
+    seed_data("samples_referenced.json", SampleReferenced)
