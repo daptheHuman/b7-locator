@@ -1,16 +1,11 @@
-from datetime import date
-from math import prod
-from fastapi import APIRouter, Query
-from fastapi.params import Depends
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from config.db import SessionLocal
 from models import models
 from schemas import schemas
-from typing import List
-from sqlalchemy import and_, func, select
-from sqlalchemy.orm import Session
-
-from fastapi import FastAPI, HTTPException
-
 
 rack_router = APIRouter(
     prefix="/rack",
@@ -38,6 +33,11 @@ def create_new_rack(sample: schemas.RackCreate, db: Session = Depends(get_db)):
     """
     # Create a new SampleRetained object based on the provided data
     new_rack = models.Rack(**sample.model_dump())
+    
+    existing_rack = db.query(models.Rack).filter(
+        models.Rack.rack_id == new_rack.rack_id).first()
+    if existing_rack:
+        raise HTTPException(status_code=409, detail="Rack already exist")
 
     # Add the new sample to the database session and commit the transaction
     db.add(new_rack)

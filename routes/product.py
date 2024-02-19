@@ -1,15 +1,12 @@
-from datetime import date
-from math import prod
-from fastapi import APIRouter, HTTPException, Query
-from fastapi.params import Depends
+from typing import List
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.orm import Session
+
 from config.db import SessionLocal
 from models import models
 from schemas import schemas
 from schemas.schemas import Product, ProductCount, ProductCreate
-from typing import List
-from sqlalchemy import and_, func, select
-from sqlalchemy.orm import Session
-
 
 products_router = APIRouter(
     prefix="/products",
@@ -85,7 +82,12 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     :return: Details of the created product
     """
     # Create a new SampleRetained object based on the provided data
-    new_product = models.SampleRetained(**product.model_dump())
+    new_product = models.Product(**product.model_dump())
+
+    existing_product = db.query(models.Product).filter(
+        models.Product.product_code == new_product.product_code).first()
+    if existing_product:
+        raise HTTPException(status_code=409, detail="Product already exist")
 
     # Add the new sample to the database session and commit the transaction
     db.add(new_product)
