@@ -1,7 +1,7 @@
-from datetime import date, datetime
-from re import L
-from typing import List, Optional
-from pydantic import BaseModel
+from datetime import date
+from typing import List
+
+from pydantic import BaseModel, Field
 
 
 class ProductBase(BaseModel):
@@ -29,13 +29,33 @@ class ProductCount(BaseModel):
     total: int
 
 
-class SampleRetainedBase(BaseModel):
-    product_code: str = "LBJAA"
-    batch_number: str = "FA004"
+class SampleReferencedBase(BaseModel):
+    product_code: str = Field("LBJAA", max_length=5)
+    batch_number: str = Field("AAAAA", max_length=5)
     manufacturing_date: date
     expiration_date: date
-    destroy_date: date
-    rack_id: str | None
+    destruct_date: date
+    rack_id: str | None = Field("A1", max_length=5)
+
+
+class SampleReferencedCreate(SampleReferencedBase):
+    rack_id: str = "A1"
+
+
+class SampleReferenced(SampleReferencedBase):
+    id: int
+
+    class Config:
+        from_attributes = True
+
+
+class SampleRetainedBase(BaseModel):
+    product_code: str = Field("LBJAA", max_length=5)
+    batch_number: str = Field("AAAAA", max_length=5)
+    manufacturing_date: date
+    expiration_date: date
+    destruct_date: date
+    rack_id: str | None = Field("A1", max_length=5)
 
 
 class SampleRetainedCreate(SampleRetainedBase):
@@ -47,6 +67,10 @@ class SampleRetained(SampleRetainedBase):
 
     class Config:
         from_attributes = True
+
+
+class SampleProductJoin(SampleRetained, Product):
+    pass
 
 
 class RackBase(BaseModel):
@@ -66,3 +90,7 @@ class Rack(RackBase):
 
     class Config:
         from_attributes = True
+
+
+class DestructReports(BaseModel):
+    samples: List[int]
