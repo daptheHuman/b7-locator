@@ -1,16 +1,14 @@
 from datetime import date
-from math import prod
-from fastapi import APIRouter, Query
-from fastapi.params import Depends
-from config.db import SessionLocal
-from models import models
-from schemas import schemas
 from typing import List
-from sqlalchemy import and_, func, select
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
-from fastapi import FastAPI, HTTPException
-
+from config.db import SessionLocal
+from models import models
+from reports.pdf_generator import generate_destruct_report
+from schemas import schemas
 
 retained_router = APIRouter(
     prefix="/retained",
@@ -50,9 +48,9 @@ def create_new_sample_retained(sample: schemas.SampleRetainedCreate, db: Session
     return [new_sample]
 
 
-@retained_router.get("/", response_model=List[schemas.SampleRetained],
+@retained_router.get("/", response_model=List[schemas.SampleProductJoin],
                      description="Get all retained sample")
-def get_retained_samples_for_product(product_code: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
+def get_retained_samples_for_product(id: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
     """
     Retrieve retained samples associated with a specific product, or all retained samples if product_code isn't specified.
 
@@ -61,31 +59,28 @@ def get_retained_samples_for_product(product_code: str = "", skip: int = 0, limi
     :return: List of retained samples for the specified product
     """
     # Query the database to retrieve retained samples for the specified product
-    if product_code:
-        retained_samples = db.query(models.SampleRetained).filter(
-            models.SampleRetained.product_code == product_code).all()
+    if id:
+        retained_samples = db.query(models.SampleRetained, models.Product).join(models.Product).filter(
+            models.SampleRetained.id == id).one()
+        if not retained_samples:
+            raise HTTPException(
+                status_code=404, detail="Retained samples not found")
+
     else:
         retained_samples = db.query(
             models.SampleRetained).offset(skip).limit(limit).all()
-    return retained_samples
 
-
-@retained_router.get("/{id}", response_model=schemas.SampleRetained,
-                     description="Get specified product retained sample")
-def get_retained_samples_for_product(id: str, db: Session = Depends(get_db)):
-    """
-
-
-    :param product_code: Product code of the product
-    :param db: Database session dependency
-    :return: List of retained samples for the specified product
-    """
-    # Query the database to retrieve retained samples for the specified product
-    retained_samples = db.query(models.SampleRetained).filter(
-        models.SampleRetained.id == id).one()
-    if not retained_samples:
-        raise HTTPException(
-            status_code=404, detail="Retained samples not found for the specified product")
+    retained_samples = [{
+        "id": sample.id,
+        "product_code": sample.product_code,
+        "batch_number": sample.batch_number,
+        "manufacturing_date": sample.manufacturing_date,
+        "expiration_date": sample.expiration_date,
+        "destruct_date": sample.destruct_date,
+        "rack_id": sample.rack_id,
+        "product_name": sample.product.product_name,
+        "shelf_life": sample.product.shelf_life
+    } for sample in retained_samples]
 
     return retained_samples
 
@@ -144,6 +139,12 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     return sample_to_delete
 
 
+@retained_router.get("/count", response_model=int, description="Count the total number of retained samples")
+def count_all_retained_samples(db: Session = Depends(get_db)):
+    count = db.query(func.count(models.SampleRetained.id)).scalar()
+    return count
+
+
 @retained_router.get("/manufacturing",  response_model=List[schemas.SampleRetainedBase],
                      description="Get a product with a specified manufacturing date")
 def get_manufacturing_products(db: Session = Depends(get_db), date: date = Query(default=date.today())):
@@ -166,12 +167,60 @@ def get_expired_products(db: Session = Depends(get_db), date: date = Query(defau
     return products
 
 
-@retained_router.get("/destroy",  response_model=List[schemas.SampleRetainedBase],
-                     description="Get a product with a specified destroy date")
-def get_destroy_products(db: Session = Depends(get_db), date: date = Query(default=date.today())):
-    products = db.query(models.SampleRetained).where(
-        models.SampleRetained.destroy_date == date)
-    if products is None:
-        raise HTTPException(status_code=404, detail="No product found")
+@retained_router.get("/destruction",  response_model=List[schemas.SampleProductJoin],
+                     description="Get a product with a specified destruction date")
+def get_destruct_sample(month: int, year: int, db: Session = Depends(get_db)):
+    print(month, year)
+    samples = db.query(models.SampleRetained).filter(extract('year', models.SampleRetained.destruct_date) == year).filter(
+        extract('month', models.SampleRetained.destruct_date) == month).all()
 
-    return products
+    if samples is None:
+        raise HTTPException(status_code=404, detail="No sample found")
+
+    retained_samples = [{
+        "id": sample.id,
+        "product_code": sample.product_code,
+        "batch_number": sample.batch_number,
+        "manufacturing_date": sample.manufacturing_date,
+        "expiration_date": sample.expiration_date,
+        "destruct_date": sample.destruct_date,
+        "rack_id": sample.rack_id,
+        "product_name": sample.product.product_name,
+        "shelf_life": sample.product.shelf_life
+    } for sample in samples]
+
+    return retained_samples
+
+
+@retained_router.post("/generate-destruction-report", description="Generate destruction reports")
+def generate_destruct_reports(samples: schemas.DestructReports, date: date = Query(default=date.today()), db: Session = Depends(get_db)):
+    # Get the list of sample IDs
+    sample_ids = samples.samples
+
+    # Check if there are any samples
+    if not sample_ids:
+        raise HTTPException(status_code=400, detail="No sample IDs provided")
+
+    # Initialize a list to store sample details
+    sample_details = []
+
+    # Retrieve details for each sample
+    for sample_id in sample_ids:
+        sample = db.query(models.SampleRetained).filter(
+            models.SampleRetained.id == sample_id).first()
+        if sample:
+            sample_retained = schemas.SampleRetained(id=sample.id,
+                                                     product_code=sample.product_code,
+                                                     batch_number=sample.batch_number,
+                                                     manufacturing_date=sample.manufacturing_date,
+                                                     expiration_date=sample.expiration_date,
+                                                     destruct_date=sample.destruct_date,
+                                                     rack_id=sample.rack_id
+                                                     )
+            sample_details.append(sample_retained)
+        else:
+            raise HTTPException(
+                status_code=400, detail=f"Sample ID's {sample_id} is missing")
+
+    pdf = generate_destruct_report(samples=sample_details, date=date)
+    return {"pdf_file_path": pdf}
