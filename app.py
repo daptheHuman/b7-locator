@@ -1,12 +1,16 @@
 from contextlib import asynccontextmanager
-from fastapi import FastAPI
+
 import uvicorn
-from models.models import Base
-from config.db import engine
-from routes.product import products_router
-from routes.sample_retained import retained_router
-from routes.rack import rack_router
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.exc import SQLAlchemyError
+
+from config.db import engine
+from models.models import Base
+from routes.product import products_router
+from routes.rack import rack_router
+from routes.sample_reference import reference_router
+from routes.sample_retained import retained_router
 
 
 @asynccontextmanager
@@ -25,9 +29,20 @@ app = FastAPI(
     version="0.0.1",
 )
 
+origins = [
+    "http://localhost:3030",
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 app.include_router(products_router)
 app.include_router(retained_router)
+app.include_router(reference_router)
 app.include_router(rack_router)
 
 
