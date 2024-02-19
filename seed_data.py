@@ -1,4 +1,5 @@
 import json
+
 from config.db import SessionLocal
 from models.models import Product, Rack, SampleRetained
 
