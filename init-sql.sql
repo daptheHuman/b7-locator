@@ -1,1 +1,0 @@
-INSERT INTO products (product_id, product_name, batch_number, period, manufacturing_date, expired_date, destroy_date) VALUES ('LBJAA', 'BEJO ANAK LIQ', 'FA005', '2', '2023-01-01', '2025-01-01', '2026-02-01');
