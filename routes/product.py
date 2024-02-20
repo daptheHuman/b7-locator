@@ -65,12 +65,6 @@ def get_products(product_code: str, db: Session = Depends(get_db)):
     return product
 
 
-@products_router.get("/count",  response_model=ProductCount)
-def get_products_count(db: Session = Depends(get_db)):
-    count_result = db.query(models.Product).count()
-    return {"total": count_result}
-
-
 @products_router.post("/",
                       response_model=Product)
 def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):

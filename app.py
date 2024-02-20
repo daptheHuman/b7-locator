@@ -11,6 +11,7 @@ from routes.product import products_router
 from routes.rack import rack_router
 from routes.sample_reference import reference_router
 from routes.sample_retained import retained_router
+from routes.stats import stats_router
 
 
 @asynccontextmanager
@@ -44,7 +45,7 @@ app.include_router(products_router)
 app.include_router(retained_router)
 app.include_router(reference_router)
 app.include_router(rack_router)
-
+app.include_router(stats_router)
 
 if __name__ == "__main__":
     uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

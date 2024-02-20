@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
-from reports.pdf_generator import generate_destruct_report
+from reports.pdf_generator import generate_destroy_report
 from schemas import schemas
 
 reference_router = APIRouter(
@@ -135,12 +135,6 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     return sample_to_delete
 
 
-@reference_router.get("/count", response_model=int, description="Count the total number of retained samples")
-def count_all_retained_samples(db: Session = Depends(get_db)):
-    count = db.query(func.count(models.SampleRetained.id)).scalar()
-    return count
-
-
 @reference_router.get("/manufacturing",  response_model=List[schemas.SampleRetainedBase],
                       description="Get a sample with a specified manufacturing date")
 def get_manufacturing_sample(db: Session = Depends(get_db), date: date = Query(default=date.today())):
@@ -163,9 +157,9 @@ def get_expired_sample(db: Session = Depends(get_db), date: date = Query(default
     return sample
 
 
-@reference_router.get("/destruction",  response_model=List[schemas.SampleProductJoin],
-                      description="Get a sample with a specified destruction date")
-def get_destruct_sample(month: int, year: int, db: Session = Depends(get_db)):
+@reference_router.get("/destroy",  response_model=List[schemas.SampleProductJoin],
+                      description="Get a sample with a specified destroy date")
+def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
     samples = db.query(models.SampleReferenced).filter(extract('year', models.SampleReferenced.destroy_date) == year).filter(
         extract('month', models.SampleReferenced.destroy_date) == month)
 
@@ -187,8 +181,8 @@ def get_destruct_sample(month: int, year: int, db: Session = Depends(get_db)):
     return reference_samples
 
 
-@reference_router.post("/generate-destruction-report", description="Generate destruction reports")
-def generate_destruct_reports(samples: schemas.DestructReports, date: date = Query(default=date.today()), db: Session = Depends(get_db)):
+@reference_router.post("/generate-destroy-report", description="Generate destroy reports")
+def generate_destroy_reports(samples: schemas.DestructReports, date: date = Query(default=date.today()), db: Session = Depends(get_db)):
     # Get the list of sample IDs
     sample_ids = samples.samples
 
@@ -217,5 +211,5 @@ def generate_destruct_reports(samples: schemas.DestructReports, date: date = Que
             raise HTTPException(
                 status_code=400, detail=f"Sample ID's {sample_id} is missing")
 
-    pdf = generate_destruct_report(samples=sample_details, date=date)
+    pdf = generate_destroy_report(samples=sample_details, date=date)
     return {"pdf_file_path": pdf}
