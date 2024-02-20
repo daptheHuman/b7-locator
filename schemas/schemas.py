@@ -34,7 +34,7 @@ class SampleReferencedBase(BaseModel):
     batch_number: str = Field("AAAAA", max_length=5)
     manufacturing_date: date
     expiration_date: date
-    destruct_date: date
+    destroy_date: date
     rack_id: str | None = Field("A1", max_length=5)
 
 
@@ -54,7 +54,7 @@ class SampleRetainedBase(BaseModel):
     batch_number: str = Field("AAAAA", max_length=5)
     manufacturing_date: date
     expiration_date: date
-    destruct_date: date
+    destroy_date: date
     rack_id: str | None = Field("A1", max_length=5)
 
 

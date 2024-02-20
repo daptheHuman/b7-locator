@@ -76,7 +76,7 @@ def get_retained_samples_for_product(id: str = "", skip: int = 0, limit: int = 1
         "batch_number": sample.batch_number,
         "manufacturing_date": sample.manufacturing_date,
         "expiration_date": sample.expiration_date,
-        "destruct_date": sample.destruct_date,
+        "destroy_date": sample.destroy_date,
         "rack_id": sample.rack_id,
         "product_name": sample.product.product_name,
         "shelf_life": sample.product.shelf_life
@@ -171,8 +171,8 @@ def get_expired_products(db: Session = Depends(get_db), date: date = Query(defau
                      description="Get a product with a specified destruction date")
 def get_destruct_sample(month: int, year: int, db: Session = Depends(get_db)):
     print(month, year)
-    samples = db.query(models.SampleRetained).filter(extract('year', models.SampleRetained.destruct_date) == year).filter(
-        extract('month', models.SampleRetained.destruct_date) == month).all()
+    samples = db.query(models.SampleRetained).filter(extract('year', models.SampleRetained.destroy_date) == year).filter(
+        extract('month', models.SampleRetained.destroy_date) == month).all()
 
     if samples is None:
         raise HTTPException(status_code=404, detail="No sample found")
@@ -183,7 +183,7 @@ def get_destruct_sample(month: int, year: int, db: Session = Depends(get_db)):
         "batch_number": sample.batch_number,
         "manufacturing_date": sample.manufacturing_date,
         "expiration_date": sample.expiration_date,
-        "destruct_date": sample.destruct_date,
+        "destroy_date": sample.destroy_date,
         "rack_id": sample.rack_id,
         "product_name": sample.product.product_name,
         "shelf_life": sample.product.shelf_life
@@ -214,7 +214,7 @@ def generate_destruct_reports(samples: schemas.DestructReports, date: date = Que
                                                      batch_number=sample.batch_number,
                                                      manufacturing_date=sample.manufacturing_date,
                                                      expiration_date=sample.expiration_date,
-                                                     destruct_date=sample.destruct_date,
+                                                     destroy_date=sample.destroy_date,
                                                      rack_id=sample.rack_id
                                                      )
             sample_details.append(sample_retained)

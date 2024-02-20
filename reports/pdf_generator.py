@@ -36,7 +36,7 @@ def generate_destruct_report(samples: List[schemas.SampleRetained], date: date):
             row.cell(data_row.product_code)
             row.cell(data_row.manufacturing_date.strftime("%d/%b/%Y"))
             row.cell(data_row.expiration_date.strftime("%d/%b/%Y"))
-            row.cell(data_row.destruct_date.strftime("%d/%b/%Y"))
+            row.cell(data_row.destroy_date.strftime("%d/%b/%Y"))
 
     # Save PDF to a file
     pdf_file_path = f"destruct_report_{date.strftime('%Y-%b-%d')}.pdf"

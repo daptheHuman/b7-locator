@@ -28,7 +28,7 @@ class SampleRetained(Base):
     batch_number = Column(String(5))
     manufacturing_date = Column(Date)
     expiration_date = Column(Date)
-    destruct_date = Column(Date)
+    destroy_date = Column(Date)
     product = relationship("Product", back_populates="retained_sample")
     rack = relationship("Rack", back_populates="retained_sample")
 
@@ -42,7 +42,7 @@ class SampleReferenced(Base):
     batch_number = Column(String(5))
     manufacturing_date = Column(Date)
     expiration_date = Column(Date)
-    destruct_date = Column(Date)
+    destroy_date = Column(Date)
     product = relationship("Product", back_populates="referenced_sample")
     rack = relationship("Rack", back_populates="referenced_sample")
 

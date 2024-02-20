@@ -40,7 +40,7 @@ def upgrade() -> None:
     sa.Column('batch_number', sa.String(length=5), nullable=True),
     sa.Column('manufacturing_date', sa.Date(), nullable=True),
     sa.Column('expiration_date', sa.Date(), nullable=True),
-    sa.Column('destruct_date', sa.Date(), nullable=True),
+    sa.Column('destroy_date', sa.Date(), nullable=True),
     sa.ForeignKeyConstraint(['product_code'], ['products.product_code'], ),
     sa.ForeignKeyConstraint(['rack_id'], ['racks.rack_id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -52,7 +52,7 @@ def upgrade() -> None:
     sa.Column('batch_number', sa.String(length=5), nullable=True),
     sa.Column('manufacturing_date', sa.Date(), nullable=True),
     sa.Column('expiration_date', sa.Date(), nullable=True),
-    sa.Column('destruct_date', sa.Date(), nullable=True),
+    sa.Column('destroy_date', sa.Date(), nullable=True),
     sa.ForeignKeyConstraint(['product_code'], ['products.product_code'], ),
     sa.ForeignKeyConstraint(['rack_id'], ['racks.rack_id'], ),
     sa.PrimaryKeyConstraint('id')
