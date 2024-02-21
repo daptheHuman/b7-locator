@@ -1,8 +1,8 @@
 from datetime import date
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy import extract, func
+from fastapi import APIRouter, Depends, HTTPException, Query, Response
+from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
@@ -186,35 +186,30 @@ def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
     return retained_samples
 
 
-@retained_router.post("/generate-destroy-report", description="Generate destroy reports")
-def generate_destroy_reports(samples: schemas.DestructReports, date: date = Query(default=date.today()), db: Session = Depends(get_db)):
-    # Get the list of sample IDs
-    sample_ids = samples.samples
-
-    # Check if there are any samples
-    if not sample_ids:
-        raise HTTPException(status_code=400, detail="No sample IDs provided")
-
-    # Initialize a list to store sample details
-    sample_details = []
-
+@retained_router.get("/generate-destroy-report", description="Generate destroy reports")
+def generate_destroy_reports(month: int, year: int, db: Session = Depends(get_db)):
     # Retrieve details for each sample
-    for sample_id in sample_ids:
-        sample = db.query(models.SampleRetained).filter(
-            models.SampleRetained.id == sample_id).first()
-        if sample:
-            sample_retained = schemas.SampleRetained(id=sample.id,
-                                                     product_code=sample.product_code,
-                                                     batch_number=sample.batch_number,
-                                                     manufacturing_date=sample.manufacturing_date,
-                                                     expiration_date=sample.expiration_date,
-                                                     destroy_date=sample.destroy_date,
-                                                     rack_id=sample.rack_id
-                                                     )
-            sample_details.append(sample_retained)
-        else:
-            raise HTTPException(
-                status_code=400, detail=f"Sample ID's {sample_id} is missing")
+    samples = db.query(models.SampleRetained).filter(extract('year', models.SampleRetained.destroy_date) == year).filter(
+        extract('month', models.SampleRetained.destroy_date) == month)
+    report_date = date(year, month, 1)
+    if samples is None:
+        raise HTTPException(status_code=404, detail="No sample found")
 
-    pdf = generate_destroy_report(samples=sample_details, date=date)
-    return {"pdf_file_path": pdf}
+    sample_referenced = [schemas.SampleProductJoin(id=sample.id,
+                                                   product_code=sample.product_code,
+                                                   product_name=sample.product.product_name,
+                                                   shelf_life=sample.product.shelf_life,
+                                                   batch_number=sample.batch_number,
+                                                   manufacturing_date=sample.manufacturing_date,
+                                                   expiration_date=sample.expiration_date,
+                                                   destroy_date=sample.destroy_date,
+                                                   rack_id=sample.rack_id
+                                                   )for sample in samples]
+
+    pdf, file_path = generate_destroy_report(
+        samples=sample_referenced, date=report_date)
+    headers = {
+        "Content-Disposition": f"attachment; filename=retained-sample_{file_path}"
+    }
+
+    return Response(content=bytes(pdf.output()), media_type="application/pdf", headers=headers)

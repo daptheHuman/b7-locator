@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from config.db import SessionLocal
 from models import models
 from schemas import schemas
-from schemas.schemas import Product, ProductCount, ProductCreate
+from schemas.schemas import Product, ProductCreate
 
 products_router = APIRouter(
     prefix="/products",
