@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
         print("An error occurred while creating the database schema:", e)
     yield
 
+
 app = FastAPI(
     lifespan=lifespan,
     title="Users API",
@@ -40,7 +41,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-    expose_headers=["*"]
+    expose_headers=["*"],
 )
 app.include_router(products_router)
 app.include_router(retained_router)

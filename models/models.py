@@ -9,14 +9,15 @@ Base = declarative_base()
 class Product(Base):
     __tablename__ = "products"
 
-    product_code = Column(String(5),  primary_key=True,
-                          unique=True, nullable=False)
+    product_code = Column(String(5), primary_key=True, unique=True, nullable=False)
     product_name = Column(String(255), nullable=False)
     shelf_life = Column(Float, nullable=False)
-    retained_sample = relationship("SampleRetained", back_populates="product",
-                                   cascade="all, delete-orphan")
-    referenced_sample = relationship("SampleReferenced", back_populates="product",
-                                     cascade="all, delete-orphan")
+    retained_sample = relationship(
+        "SampleRetained", back_populates="product", cascade="all, delete-orphan"
+    )
+    referenced_sample = relationship(
+        "SampleReferenced", back_populates="product", cascade="all, delete-orphan"
+    )
 
 
 class SampleRetained(Base):
@@ -52,6 +53,8 @@ class Rack(Base):
     rack_id = Column(String(5), primary_key=True, unique=True)
     location = Column(String(255))
     retained_sample = relationship(
-        "SampleRetained", back_populates="rack",  cascade="all, delete-orphan")
+        "SampleRetained", back_populates="rack", cascade="all, delete-orphan"
+    )
     referenced_sample = relationship(
-        "SampleReferenced", back_populates="rack",  cascade="all, delete-orphan")
+        "SampleReferenced", back_populates="rack", cascade="all, delete-orphan"
+    )

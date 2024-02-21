@@ -8,10 +8,7 @@ from models import models
 from schemas import schemas
 from schemas.schemas import Product, ProductCreate
 
-products_router = APIRouter(
-    prefix="/products",
-    tags=["products"]
-)
+products_router = APIRouter(prefix="/products", tags=["products"])
 
 
 def get_db():
@@ -37,8 +34,7 @@ def get_all_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_
     :param db: Database session dependency
     :return: List of products
     """
-    products = db.query(models.Product).offset(
-        skip).limit(limit).all()
+    products = db.query(models.Product).offset(skip).limit(limit).all()
     return products
 
 
@@ -57,16 +53,18 @@ def get_products(product_code: str, db: Session = Depends(get_db)):
     :param db: Database session dependency
     :return: List of products
     """
-    product = db.query(models.Product).filter(
-        models.Product.product_code == product_code).first()
+    product = (
+        db.query(models.Product)
+        .filter(models.Product.product_code == product_code)
+        .first()
+    )
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
     return product
 
 
-@products_router.post("/",
-                      response_model=Product)
+@products_router.post("/", response_model=Product)
 def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     """
     Create a new product.
@@ -78,8 +76,11 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     # Create a new SampleRetained object based on the provided data
     new_product = models.Product(**product.model_dump())
 
-    existing_product = db.query(models.Product).filter(
-        models.Product.product_code == new_product.product_code).first()
+    existing_product = (
+        db.query(models.Product)
+        .filter(models.Product.product_code == new_product.product_code)
+        .first()
+    )
     if existing_product:
         raise HTTPException(status_code=409, detail="Product already exist")
 
@@ -94,10 +95,14 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     return [new_product]
 
 
-@products_router.put("/{product_code}",
-                     response_model=schemas.Product,
-                     description="Update a product by Id")
-def update_product_by_id(product_code: str, product: schemas.ProductUpdate, db: Session = Depends(get_db)):
+@products_router.put(
+    "/{product_code}",
+    response_model=schemas.Product,
+    description="Update a product by Id",
+)
+def update_product_by_id(
+    product_code: str, product: schemas.ProductUpdate, db: Session = Depends(get_db)
+):
     """
     Update an existing product by Id.
 
@@ -107,8 +112,11 @@ def update_product_by_id(product_code: str, product: schemas.ProductUpdate, db: 
     :return: Updated details of the product
     """
     # Retrieve the product from the database
-    existing_product = db.query(models.Product).filter(
-        models.Product.product_code == product_code).first()
+    existing_product = (
+        db.query(models.Product)
+        .filter(models.Product.product_code == product_code)
+        .first()
+    )
     if existing_product is None:
         raise HTTPException(status_code=404, detail="Product not found")
 
@@ -123,9 +131,11 @@ def update_product_by_id(product_code: str, product: schemas.ProductUpdate, db: 
     return existing_product
 
 
-@products_router.delete("/{product_code}",
-                        response_model=schemas.ProductBase,
-                        description="Delete a product by Id")
+@products_router.delete(
+    "/{product_code}",
+    response_model=schemas.ProductBase,
+    description="Delete a product by Id",
+)
 def delete_product_by_id(product_code: str, db: Session = Depends(get_db)):
     """
     Delete an existing product by Id.
@@ -135,8 +145,11 @@ def delete_product_by_id(product_code: str, db: Session = Depends(get_db)):
     :return: Details of the deleted product
     """
     # Retrieve the product from the database
-    product_to_delete = db.query(models.Product).filter(
-        models.Product.product_code == product_code).first()
+    product_to_delete = (
+        db.query(models.Product)
+        .filter(models.Product.product_code == product_code)
+        .first()
+    )
     if product_to_delete is None:
         raise HTTPException(status_code=404, detail="Product not found")
 

@@ -9,7 +9,7 @@ def seed_data(json_file, model):
     session = SessionLocal()
 
     # Open a json file
-    with open(json_file, 'r') as file:
+    with open(json_file, "r") as file:
         data = json.load(file)
 
     # Seed data
