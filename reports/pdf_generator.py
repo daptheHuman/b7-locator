@@ -5,7 +5,7 @@ from fpdf import FPDF, Align, FontFace
 
 from schemas import schemas
 
-COLUMN_WIDTHS = (4, 15, 10, 10, 11, 11, 11, 6, 6)
+COLUMN_WIDTHS = (3, 20, 8, 11, 11, 9, 9, 7, 7)
 APPROVED_STAMP = "reports/assets/approved.png"
 B7_LOGO = "reports/assets/b7-biru.png"
 
@@ -30,6 +30,7 @@ class PDF(FPDF):
         self.set_y(-55)
         # Printing page number:
         if self.finished:
+            self.b_margin = 60
             with self.table(
                 line_height=4,
                 col_widths=COLUMN_WIDTHS,
@@ -61,7 +62,7 @@ class PDF(FPDF):
                 headers.cell(colspan=2)
                 headers.cell("CR-QO-QC-5024.00 (16 Agt 2018)", colspan=4)
 
-            self.image(APPROVED_STAMP, x=127, y=175, w=25)
+            self.image(APPROVED_STAMP, x=135, y=180, w=25)
             self.multi_cell(
                 0,
                 3,
