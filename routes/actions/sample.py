@@ -56,8 +56,8 @@ def create_sample(
         sample.manufacturing_date, product.shelf_life
     )
 
-    # Calculate the destroy date by adding 1 year and 2 months to the expiration date
-    destroy_date = add_years_and_months(expiration_date, 1, 2)
+    # Calculate the destroy date by adding 1 year and 1 months to the expiration date
+    destroy_date = add_years_and_months(expiration_date, 1, 1)
 
     # Create a new SampleReferenced object with the calculated dates
     new_sample = SampleModel(

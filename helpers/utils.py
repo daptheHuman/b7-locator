@@ -7,7 +7,7 @@ def add_years_and_months(start_date, years, months=0):
         total_months = int(years * 12) + months
         # Calculate the end date by adding the total months to the start date
         end_date = start_date + timedelta(
-            days=total_months * 30.436875  # mean month length
+            days=total_months * 31  # mean month length
         )
 
         return end_date
