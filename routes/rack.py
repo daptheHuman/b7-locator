@@ -18,9 +18,7 @@ def get_db():
         db.close()
 
 
-@rack_router.post(
-    "/", response_model=List[schemas.Rack], description="Create a new rack"
-)
+@rack_router.post("/", response_model=schemas.Rack, description="Create a new rack")
 def create_new_rack(sample: schemas.RackCreate, db: Session = Depends(get_db)):
     """
     Create a new rack.
@@ -46,7 +44,7 @@ def create_new_rack(sample: schemas.RackCreate, db: Session = Depends(get_db)):
     db.refresh(new_rack)
 
     # Return the details of the created sample
-    return [new_rack]
+    return new_rack
 
 
 @rack_router.get(

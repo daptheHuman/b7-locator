@@ -6,8 +6,12 @@ from sqlalchemy import extract
 from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
+from helpers.utils import add_years_and_months
 from models import models
 from reports.pdf_generator import generate_destroy_report
+from routes import actions
+from routes.actions import sample
+from routes.actions.sample import create_sample
 from schemas import schemas
 
 reference_router = APIRouter(prefix="/reference", tags=["reference"])
@@ -26,7 +30,7 @@ def get_db():
     response_model=List[schemas.SampleReferenced],
     description="Get all reference sample is stored",
 )
-def create_new_sample_retained(
+def create_new_sample_referenced(
     sample: schemas.SampleRetainedCreate, db: Session = Depends(get_db)
 ):
     """
@@ -36,17 +40,7 @@ def create_new_sample_retained(
     :param db: Database session dependency
     :return: Details of the created sample
     """
-    # Create a new SampleReferenced object based on the provided data
-    new_sample = models.SampleReferenced(**sample.model_dump())
-
-    # Add the new sample to the database session and commit the transaction
-    db.add(new_sample)
-    db.commit()
-
-    # Refresh the object to ensure it reflects the latest state in the database
-    db.refresh(new_sample)
-
-    # Return the details of the created sample
+    new_sample = create_sample(db, sample=sample, SampleModel=models.SampleReferenced)
     return [new_sample]
 
 
@@ -55,7 +49,7 @@ def create_new_sample_retained(
     response_model=List[schemas.SampleProductJoin],
     description="Get all reference sample",
 )
-def get_retained_samples_for_product(
+def get_referenced_samples_for_product(
     id: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
 ):
     """
@@ -67,18 +61,11 @@ def get_retained_samples_for_product(
     """
     # Query the database to retrieve reference samples for the specified sample
     if id:
-        retained_samples = (
-            db.query(models.SampleReferenced, models.Product)
-            .join(models.Product)
-            .filter(models.SampleReferenced.id == id)
-            .one()
-        )
+        samples = sample.get_sample_by_id(db, id, models.SampleReferenced)
     else:
-        retained_samples = (
-            db.query(models.SampleReferenced).offset(skip).limit(limit).all()
-        )
+        samples = sample.get_all_sample(db, skip, limit, models.SampleReferenced)
 
-    retained_samples = [
+    samples = [
         {
             "id": sample.id,
             "product_code": sample.product_code,
@@ -90,10 +77,10 @@ def get_retained_samples_for_product(
             "product_name": sample.product.product_name,
             "shelf_life": sample.product.shelf_life,
         }
-        for sample in retained_samples
+        for sample in samples
     ]
 
-    return retained_samples
+    return samples
 
 
 @reference_router.put(

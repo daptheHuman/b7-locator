@@ -6,7 +6,6 @@ from sqlalchemy.orm import Session
 from config.db import SessionLocal
 from models import models
 from schemas import schemas
-from schemas.schemas import Product, ProductCreate
 
 products_router = APIRouter(prefix="/products", tags=["products"])
 
@@ -21,7 +20,7 @@ def get_db():
 
 @products_router.get(
     "/",
-    response_model=List[Product],
+    response_model=List[schemas.Product],
     description="Get a list of products by product code or retrieve all products if no product code is provided",
 )
 def get_all_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_db)):
@@ -40,7 +39,7 @@ def get_all_products(skip: int = 0, limit: int = 100, db: Session = Depends(get_
 
 @products_router.get(
     "/{product_code}",
-    response_model=Product,
+    response_model=schemas.Product,
     description="Get a list of products by product code or retrieve all products if no product code is provided",
 )
 def get_products(product_code: str, db: Session = Depends(get_db)):
@@ -64,8 +63,8 @@ def get_products(product_code: str, db: Session = Depends(get_db)):
     return product
 
 
-@products_router.post("/", response_model=Product)
-def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
+@products_router.post("/", response_model=schemas.Product)
+def create_new_product(product: schemas.ProductCreate, db: Session = Depends(get_db)):
     """
     Create a new product.
 
@@ -74,6 +73,7 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     :return: Details of the created product
     """
     # Create a new SampleRetained object based on the provided data
+    print(product.model_dump())
     new_product = models.Product(**product.model_dump())
 
     existing_product = (
@@ -92,7 +92,7 @@ def create_new_product(product: ProductCreate, db: Session = Depends(get_db)):
     db.refresh(new_product)
 
     # Return the details of the created sample
-    return [new_product]
+    return new_product
 
 
 @products_router.put(

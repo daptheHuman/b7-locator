@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 from config.db import SessionLocal
 from models import models
 from reports.pdf_generator import generate_destroy_report
+from routes.actions.sample import create_sample
 from schemas import schemas
 
 retained_router = APIRouter(prefix="/retained", tags=["retained"])
@@ -36,17 +37,7 @@ def create_new_sample_retained(
     :param db: Database session dependency
     :return: Details of the created sample
     """
-    # Create a new SampleRetained object based on the provided data
-    new_sample = models.SampleRetained(**sample.model_dump())
-
-    # Add the new sample to the database session and commit the transaction
-    db.add(new_sample)
-    db.commit()
-
-    # Refresh the object to ensure it reflects the latest state in the database
-    db.refresh(new_sample)
-
-    # Return the details of the created sample
+    new_sample = create_sample(db, sample=sample, SampleModel=models.SampleRetained)
     return [new_sample]
 
 

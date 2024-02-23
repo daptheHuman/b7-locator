@@ -7,10 +7,11 @@ from pydantic import BaseModel, Field
 class ProductBase(BaseModel):
     product_name: str
     shelf_life: float
+    product_code: str
 
 
 class ProductCreate(ProductBase):
-    product_code: str
+    product_code: str = Field("AAAAA", max_length=5)
     pass
 
 
@@ -19,7 +20,7 @@ class ProductUpdate(ProductBase):
 
 
 class Product(ProductBase):
-    product_code: str
+    pass
 
     class Config:
         from_attributes = True
@@ -38,8 +39,12 @@ class SampleReferencedBase(BaseModel):
     rack_id: str | None = Field("A1", max_length=5)
 
 
-class SampleReferencedCreate(SampleReferencedBase):
-    rack_id: str = "A1"
+class SampleReferencedCreate(BaseModel):
+    # Override the attributes to accept only product_code, batch_number, and manufacturing_date
+    product_code: str
+    batch_number: str
+    manufacturing_date: date
+    rack_id: str | None
 
 
 class SampleReferenced(SampleReferencedBase):
@@ -58,8 +63,12 @@ class SampleRetainedBase(BaseModel):
     rack_id: str | None = Field("A1", max_length=5)
 
 
-class SampleRetainedCreate(SampleRetainedBase):
-    rack_id: str = "A1"
+class SampleRetainedCreate(BaseModel):
+    # Override the attributes to accept only product_code, batch_number, and manufacturing_date
+    product_code: str
+    batch_number: str
+    manufacturing_date: date
+    rack_id: str | None
 
 
 class SampleRetained(SampleRetainedBase):
