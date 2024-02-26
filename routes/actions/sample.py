@@ -9,6 +9,7 @@ from helpers import utils
 from helpers.utils import add_years_and_months
 from models import models
 from reports.pdf_generator import generate_destroy_report
+from routes.actions.rack import get_rack_by_id
 from schemas import schemas
 
 
@@ -98,7 +99,29 @@ def create_sample(
     # Calculate the destroy date by adding 1 year and 1 months to the expiration date
     destroy_date = add_years_and_months(expiration_date, 1, 1)
 
-    # Create a new SampleReferenced object with the calculated dates
+    if sample.rack_id:
+        rack = get_rack_by_id(sample.rack_id)
+        if rack.max_stored > len(rack.retained_sample):  # Check if capacity available
+            new_sample = SampleModel(
+                product_code=sample.product_code,
+                batch_number=sample.batch_number,
+                manufacturing_date=sample.manufacturing_date,
+                rack_id=sample.rack_id,
+                expiration_date=expiration_date,
+                destroy_date=destroy_date,
+            )
+
+            # Add the new sample to the database session and commit the transaction
+            db.add(new_sample)
+            db.commit()
+
+            # Refresh the object to ensure it reflects the latest state in the database
+            db.refresh(new_sample)
+
+            return new_sample
+        else:
+            raise HTTPException(status_code=400, detail="Rack capacity exceeded")
+
     new_sample = SampleModel(
         product_code=sample.product_code,
         batch_number=sample.batch_number,
@@ -122,23 +145,34 @@ def create_sample(
 def update_sample(
     db: Session,
     id: str,
-    updatedSample: schemas.SampleRetained | schemas.SampleReferenced,
+    updated_sample: schemas.SampleUpdate,
     SampleModel: models.SampleRetained | models.SampleReferenced,
 ):
     # Retrieve the sample from the database
-    existing_sample = db.query(SampleModel).filter(SampleModel.id == id).first()
+    existing_sample = db.query(SampleModel).filter(SampleModel.id == id)
     if existing_sample is None:
         raise HTTPException(status_code=404, detail="Retained sample not found")
 
-    # Update the attributes of the existing sample with the new data
-    for key, value in updatedSample.model_dump().items():
-        setattr(existing_sample, key, value)
+    original_rack_id = existing_sample.first().rack_id
+    new_rack_id = updated_sample.rack_id
+
+    if new_rack_id != original_rack_id:
+        # Check capacity of the new rack (if provided)
+        if new_rack_id:
+            new_rack = get_rack_by_id(db, new_rack_id)
+            if new_rack and new_rack.max_stored <= len(new_rack.retained_sample) + len(
+                new_rack.referenced_sample
+            ):
+                raise HTTPException(status_code=400, detail="Rack capacity exceeded")
+
+    # Update sample attributes
+    existing_sample.update(updated_sample.model_dump())
 
     # Commit the transaction to save the changes
     db.commit()
 
     # Return the updated sample
-    return updatedSample
+    return updated_sample
 
 
 def delete_sample(
