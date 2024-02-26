@@ -217,41 +217,18 @@ def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
     return reference_samples
 
 
-@reference_router.get(
+@reference_router.post(
     "/generate-destroy-report", description="Generate destroy reports"
 )
-def generate_destroy_reports(month: int, year: int, db: Session = Depends(get_db)):
-    # Retrieve details for each sample
-    samples = (
-        db.query(models.SampleReferenced)
-        .filter(extract("year", models.SampleReferenced.destroy_date) == year)
-        .filter(extract("month", models.SampleReferenced.destroy_date) == month)
+def generate_destroy_reports(
+    month: int,
+    year: int,
+    package_weight: List[schemas.DestroyPackageAndWeight],
+    db: Session = Depends(get_db),
+):
+    pdf, headers = sample.create_destroy_reports(
+        db, month, year, package_weight, models.SampleReferenced
     )
-    report_date = date(year, month, 1)
-    if samples is None:
-        raise HTTPException(status_code=404, detail="No sample found")
-
-    sample_referenced = [
-        schemas.SampleProductJoin(
-            id=sample.id,
-            product_code=sample.product_code,
-            product_name=sample.product.product_name,
-            shelf_life=sample.product.shelf_life,
-            batch_number=sample.batch_number,
-            manufacturing_date=sample.manufacturing_date,
-            expiration_date=sample.expiration_date,
-            destroy_date=sample.destroy_date,
-            rack_id=sample.rack_id,
-        )
-        for sample in samples
-    ]
-
-    pdf, file_path = generate_destroy_report(
-        samples=sample_referenced, date=report_date
-    )
-    headers = {
-        "Content-Disposition": f"attachment; filename=reference-sample_{file_path}"
-    }
 
     return Response(
         content=bytes(pdf.output()), media_type="application/pdf", headers=headers

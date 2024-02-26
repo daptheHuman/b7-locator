@@ -74,7 +74,7 @@ class PDF(FPDF):
 
 
 def generate_destroy_report(
-    samples: List[schemas.SampleProductJoin], date: date, page: int = 1
+    samples: List[schemas.DestructObject], date: date, page: int = 1
 ):
     pdf = PDF(orientation="landscape", format="A4")
     pdf.add_page()
@@ -104,7 +104,7 @@ def generate_destroy_report(
         headers.cell("Lokasi", colspan=2)
         headers.cell("Pulo Gadung", colspan=7)
 
-    fill_yellow_style = FontFace(fill_color=(255, 255, 0))
+    fill_grey_style = FontFace(fill_color=(192, 192, 192))
     headings_style = FontFace(emphasis="BOLD", fill_color=(192, 192, 192))
     with pdf.table(
         col_widths=COLUMN_WIDTHS, text_align=Align.C, headings_style=headings_style
@@ -125,12 +125,12 @@ def generate_destroy_report(
             table_row.cell(str(idx + 1))
             table_row.cell(data_row.product_name)
             table_row.cell(data_row.product_code)
-            table_row.cell(data_row.batch_number)
+            table_row.cell(data_row.batch_numbers)
             table_row.cell(data_row.manufacturing_date.strftime("%b-%y"))
             table_row.cell(data_row.expiration_date.strftime("%b-%y"))
             table_row.cell(data_row.destroy_date.strftime("%b-%y"))
-            table_row.cell(style=fill_yellow_style)
-            table_row.cell(style=fill_yellow_style)
+            table_row.cell(data_row.package, style=fill_grey_style)
+            table_row.cell(str(data_row.weight), style=fill_grey_style)
 
     # Save PDF to a file
     pdf.finished = True

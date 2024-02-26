@@ -103,3 +103,20 @@ class Rack(RackBase):
 
 class DestructReports(BaseModel):
     samples: List[int]
+
+
+class DestructObject(BaseModel):
+    product_code: str
+    product_name: str
+    manufacturing_date: date
+    expiration_date: date
+    destroy_date: date
+    batch_numbers: str
+    package: str = ""
+    weight: float = 0.0
+
+
+class DestroyPackageAndWeight(BaseModel):
+    product_code: str
+    package: str
+    weight: float

@@ -1,8 +1,14 @@
+from datetime import date
+from typing import List
+
 from fastapi import HTTPException
+from sqlalchemy import ARRAY, String, extract, func
 from sqlalchemy.orm import Session
 
+from helpers import utils
 from helpers.utils import add_years_and_months
 from models import models
+from reports.pdf_generator import generate_destroy_report
 from schemas import schemas
 
 
@@ -78,3 +84,60 @@ def create_sample(
 
     # Return the details of the created sample
     return new_sample
+
+
+def create_destroy_reports(
+    db: Session,
+    month: int,
+    year: int,
+    packageWeight: List[schemas.DestroyPackageAndWeight],
+    SampleModel: models.SampleReferenced | models.SampleRetained,
+):
+    # Retrieve details for each sample
+    samples = (
+        db.query(
+            SampleModel.product_code,
+            models.Product.product_name,
+            SampleModel.manufacturing_date,
+            SampleModel.expiration_date,
+            SampleModel.destroy_date,
+            func.group_concat(SampleModel.batch_number).label("batch_numbers"),
+        )
+        .join(SampleModel.product)  # Join with the Product table
+        .filter(extract("year", SampleModel.destroy_date) == year)
+        .filter(extract("month", SampleModel.destroy_date) == month)
+        .group_by(SampleModel.product_code)
+        .all()
+    )
+
+    report_date = date(year, month, 1)
+    if samples is None:
+        raise HTTPException(status_code=404, detail="No sample found")
+
+    # Convert the results to a dictionary with product_code as keys and merged data as values
+    merged_samples = [
+        schemas.DestructObject(
+            product_code=sample.product_code,
+            product_name=sample.product_name,
+            manufacturing_date=sample.manufacturing_date,
+            expiration_date=sample.expiration_date,
+            destroy_date=sample.destroy_date,
+            batch_numbers=utils.format_batch_numbers(sample.batch_numbers.split(",")),
+        )
+        for sample in samples
+    ]
+
+    for item in packageWeight:
+        for sample in merged_samples:
+            if sample.product_code == item.product_code:
+                sample.package = item.package
+                sample.weight = item.weight
+                break  # Break once the product_code is found
+
+    print(merged_samples)
+    pdf, file_path = generate_destroy_report(samples=merged_samples, date=report_date)
+    headers = {
+        "Content-Disposition": f"attachment; filename=retained-sample_{file_path}"
+    }
+
+    return pdf, headers
