@@ -21,11 +21,11 @@ def get_db():
 
 @retained_router.post(
     "/",
-    response_model=List[schemas.SampleRetained],
+    response_model=List[schemas.Sample],
     description="Get all retained sample is stored",
 )
 def create_new_sample_retained(
-    sample: schemas.SampleRetainedCreate, db: Session = Depends(get_db)
+    sample: schemas.SampleCreate, db: Session = Depends(get_db)
 ):
     """
     Create a new retained sample.
@@ -64,7 +64,6 @@ def get_retained_samples_for_product(
         retained_samples = sample.get_all_sample(
             db, skip, limit, SampleModel=models.SampleRetained
         )
-
     samples = [
         schemas.SampleProductJoin(
             id=sample.id,
@@ -73,7 +72,7 @@ def get_retained_samples_for_product(
             manufacturing_date=sample.manufacturing_date,
             expiration_date=sample.expiration_date,
             destroy_date=sample.destroy_date,
-            rack_id=sample.rack_id,
+            rack_id=sample.rack_id if sample.rack_id else "",
             product_name=sample.product.product_name,
             shelf_life=sample.product.shelf_life,
         )
@@ -85,11 +84,11 @@ def get_retained_samples_for_product(
 
 @retained_router.put(
     "/{id}",
-    response_model=schemas.SampleRetained,
+    response_model=schemas.SampleUpdate,
     description="Update a retained sample by ID",
 )
 def update_retained_sample(
-    id: str, updated_sample: schemas.SampleRetained, db: Session = Depends(get_db)
+    id: str, updated_sample: schemas.SampleUpdate, db: Session = Depends(get_db)
 ):
     """
     Update an existing retained sample by ID.
@@ -109,7 +108,7 @@ def update_retained_sample(
 
 @retained_router.delete(
     "/{id}",
-    response_model=schemas.SampleRetained,
+    response_model=schemas.Sample,
     description="Delete a retained sample by ID",
 )
 def delete_retained_sample(id: str, db: Session = Depends(get_db)):

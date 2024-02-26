@@ -77,7 +77,7 @@ def get_destroy_by_month_year(
 
 def create_sample(
     db: Session,
-    sample: schemas.SampleRetainedCreate | schemas.SampleReferencedCreate,
+    sample: schemas.SampleCreate | schemas.Sample,
     SampleModel: models.SampleReferenced | models.SampleRetained,
 ):
     # Retrieve the product information from the database
@@ -137,7 +137,6 @@ def create_sample(
 
     # Refresh the object to ensure it reflects the latest state in the database
     db.refresh(new_sample)
-
     # Return the details of the created sample
     return new_sample
 

@@ -22,11 +22,11 @@ def get_db():
 
 @reference_router.post(
     "/",
-    response_model=List[schemas.SampleReferenced],
+    response_model=List[schemas.Sample],
     description="Get all reference sample is stored",
 )
 def create_new_sample_referenced(
-    sample: schemas.SampleRetainedCreate, db: Session = Depends(get_db)
+    sample: schemas.SampleCreate, db: Session = Depends(get_db)
 ):
     """
     Create a new reference sample.
@@ -68,7 +68,7 @@ def get_referenced_samples_for_product(
             manufacturing_date=sample.manufacturing_date,
             expiration_date=sample.expiration_date,
             destroy_date=sample.destroy_date,
-            rack_id=sample.rack_id,
+            rack_id=sample.rack_id if sample.rack_id else "",
             product_name=sample.product.product_name,
             shelf_life=sample.product.shelf_life,
         )
@@ -80,11 +80,11 @@ def get_referenced_samples_for_product(
 
 @reference_router.put(
     "/{id}",
-    response_model=schemas.SampleReferenced,
+    response_model=schemas.Sample,
     description="Update a reference sample by ID",
 )
 def update_retained_sample(
-    id: str, updated_sample: schemas.SampleReferenced, db: Session = Depends(get_db)
+    id: str, updated_sample: schemas.Sample, db: Session = Depends(get_db)
 ):
     """
     Update an existing reference sample by ID.
@@ -104,7 +104,7 @@ def update_retained_sample(
 
 @reference_router.delete(
     "/{id}",
-    response_model=schemas.SampleReferenced,
+    response_model=schemas.Sample,
     description="Delete a reference sample by ID",
 )
 def delete_retained_sample(id: str, db: Session = Depends(get_db)):
