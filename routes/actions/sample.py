@@ -2,7 +2,7 @@ from datetime import date
 from typing import List
 
 from fastapi import HTTPException
-from sqlalchemy import ARRAY, String, extract, func
+from sqlalchemy import extract, func
 from sqlalchemy.orm import Session
 
 from helpers import utils
@@ -38,6 +38,39 @@ def get_all_sample(
 ):
     samples = db.query(SampleModel).offset(skip).limit(limit).all()
 
+    return samples
+
+
+def get_destroy_by_month_year(
+    db: Session,
+    month: int,
+    year: int,
+    SampleModel: models.SampleReferenced | models.SampleRetained,
+):
+    samples = (
+        db.query(SampleModel)
+        .filter(extract("year", SampleModel.destroy_date) == year)
+        .filter(extract("month", SampleModel.destroy_date) == month)
+        .all()
+    )
+
+    if samples is None:
+        raise HTTPException(status_code=404, detail="No sample found")
+
+    samples = [
+        schemas.SampleProductJoin(
+            id=sample.id,
+            product_code=sample.product_code,
+            batch_number=sample.batch_number,
+            manufacturing_date=sample.manufacturing_date,
+            expiration_date=sample.expiration_date,
+            destroy_date=sample.destroy_date,
+            rack_id=sample.rack_id,
+            product_name=sample.product.product_name,
+            shelf_life=sample.product.shelf_life,
+        )
+        for sample in samples
+    ]
     return samples
 
 
@@ -84,6 +117,43 @@ def create_sample(
 
     # Return the details of the created sample
     return new_sample
+
+
+def update_sample(
+    db: Session,
+    id: str,
+    updatedSample: schemas.SampleRetained | schemas.SampleReferenced,
+    SampleModel: models.SampleRetained | models.SampleReferenced,
+):
+    # Retrieve the sample from the database
+    existing_sample = db.query(SampleModel).filter(SampleModel.id == id).first()
+    if existing_sample is None:
+        raise HTTPException(status_code=404, detail="Retained sample not found")
+
+    # Update the attributes of the existing sample with the new data
+    for key, value in updatedSample.model_dump().items():
+        setattr(existing_sample, key, value)
+
+    # Commit the transaction to save the changes
+    db.commit()
+
+    # Return the updated sample
+    return updatedSample
+
+
+def delete_sample(
+    db: Session, id: str, SampleModel: models.SampleRetained | models.SampleReferenced
+):
+    sample_to_delete = db.query(SampleModel).filter(SampleModel.id == id).first()
+    if sample_to_delete is None:
+        raise HTTPException(status_code=404, detail="Sample not found")
+
+    # Delete the sample from the database
+    db.delete(sample_to_delete)
+    db.commit()
+
+    # Return the details of the deleted sample
+    return sample_to_delete
 
 
 def create_destroy_reports(
@@ -134,10 +204,9 @@ def create_destroy_reports(
                 sample.weight = item.weight
                 break  # Break once the product_code is found
 
-    print(merged_samples)
     pdf, file_path = generate_destroy_report(samples=merged_samples, date=report_date)
     headers = {
-        "Content-Disposition": f"attachment; filename=retained-sample_{file_path}"
+        "Content-Disposition": f"attachment; filename={SampleModel.__tablename__}-{file_path}"
     }
 
     return pdf, headers
