@@ -51,6 +51,7 @@ class SampleReferenced(Base):
 class Rack(Base):
     __tablename__ = "racks"
     rack_id = Column(String(5), primary_key=True, unique=True)
+    max_stored = Column(Integer, nullable=False)
     location = Column(String(255))
     retained_sample = relationship(
         "SampleRetained", back_populates="rack", cascade="all, delete-orphan"

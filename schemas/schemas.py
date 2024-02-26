@@ -84,6 +84,7 @@ class SampleProductJoin(SampleRetained, Product):
 
 class RackBase(BaseModel):
     location: str
+    max_stored: int
 
 
 class RackCreate(RackBase):
