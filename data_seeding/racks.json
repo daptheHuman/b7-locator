@@ -1,10 +1,12 @@
 [
   {
     "rack_id": "A1",
-    "location": "Utara"
+    "location": "Utara",
+    "max_stored": "5"
   },
   {
     "rack_id": "A2",
-    "location": "Selatan"
+    "location": "Selatan",
+    "max_stored": "5"
   }
 ]
