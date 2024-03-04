@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
-from routes.actions import sample
+from routes.actions import auth_action, sample
 from routes.actions.sample import create_sample
 from schemas import schemas
 
@@ -82,8 +82,9 @@ def get_referenced_samples_for_product(
     "/{id}",
     response_model=schemas.Sample,
     description="Update a reference sample by ID",
+    dependencies=[Depends(auth_action.is_admin)],
 )
-def update_retained_sample(
+def update_referenced_sample(
     id: str, updated_sample: schemas.Sample, db: Session = Depends(get_db)
 ):
     """
@@ -106,6 +107,7 @@ def update_retained_sample(
     "/{id}",
     response_model=schemas.Sample,
     description="Delete a reference sample by ID",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     """

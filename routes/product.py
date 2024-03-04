@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
+from routes.actions import auth_action
 from schemas import schemas
 
 products_router = APIRouter(prefix="/products", tags=["products"])
@@ -73,7 +74,6 @@ def create_new_product(product: schemas.ProductCreate, db: Session = Depends(get
     :return: Details of the created product
     """
     # Create a new SampleRetained object based on the provided data
-    print(product.model_dump())
     new_product = models.Product(**product.model_dump())
 
     existing_product = (
@@ -99,6 +99,7 @@ def create_new_product(product: schemas.ProductCreate, db: Session = Depends(get
     "/{product_code}",
     response_model=schemas.Product,
     description="Update a product by Id",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def update_product_by_id(
     product_code: str, product: schemas.ProductUpdate, db: Session = Depends(get_db)
@@ -135,6 +136,7 @@ def update_product_by_id(
     "/{product_code}",
     response_model=schemas.ProductBase,
     description="Delete a product by Id",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def delete_product_by_id(product_code: str, db: Session = Depends(get_db)):
     """

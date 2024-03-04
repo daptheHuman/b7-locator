@@ -1,9 +1,31 @@
-from sqlalchemy import Column, Date, Float, ForeignKey
+from sqlalchemy import Boolean, Column, Date, DateTime, Float, ForeignKey, func
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.sqltypes import Integer, String
 
 Base = declarative_base()
+
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    username = Column(String(255))
+    password = Column(String(255))
+    is_admin = Column(Boolean)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+
+class Audit(Base):
+    __tablename__ = "audit"
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    url = Column(String(255))
+    headers = Column(String(255))
+    method = Column(String(255))
+    request = Column(String(255))
+    response = Column(String(255))
+    timestamp = Column(DateTime(timezone=True), server_default=func.now())
 
 
 class Product(Base):

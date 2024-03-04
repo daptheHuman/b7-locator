@@ -16,6 +16,7 @@
     "destroy_date": "2024-02-01"
   },
   {
+    "rack_id": "A2",
     "product_code": "LBMAN",
     "batch_number": "FA276",
     "manufacturing_date": "2023-01-01",
@@ -23,6 +24,7 @@
     "destroy_date": "2024-02-01"
   },
   {
+    "rack_id": "A2",
     "product_code": "LBJAA",
     "batch_number": "FA006",
     "manufacturing_date": "2023-01-01",
@@ -30,6 +32,7 @@
     "destroy_date": "2024-02-01"
   },
   {
+    "rack_id": "A2",
     "product_code": "LBMAN",
     "batch_number": "FA277",
     "manufacturing_date": "2023-01-01",
@@ -37,6 +40,7 @@
     "destroy_date": "2024-02-01"
   },
   {
+    "rack_id": "A1",
     "product_code": "LBMAN",
     "batch_number": "FA278",
     "manufacturing_date": "2023-01-01",

@@ -33,7 +33,7 @@ def get_retained_count(db: Session = Depends(get_db)):
     return count_result
 
 
-@stats_router.get("/reference_samples/count", response_model=int)
-def get_reference_count(db: Session = Depends(get_db)):
-    count_result = db.query(models.SampleReferenced).count()
-    return {"total": count_result}
+@stats_router.get("/audit/count", response_model=int)
+def get_audit_count(db: Session = Depends(get_db)):
+    count_result = db.query(models.Audit).count()
+    return count_result

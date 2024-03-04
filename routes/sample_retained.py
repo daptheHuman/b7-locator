@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
-from routes.actions import sample
+from routes.actions import auth_action, sample
 from schemas import schemas
 
 retained_router = APIRouter(prefix="/retained", tags=["retained"])
@@ -25,7 +25,7 @@ def get_db():
     description="Get all retained sample is stored",
 )
 def create_new_sample_retained(
-    sample: schemas.SampleCreate, db: Session = Depends(get_db)
+    sample_detail: schemas.SampleCreate, db: Session = Depends(get_db)
 ):
     """
     Create a new retained sample.
@@ -35,7 +35,7 @@ def create_new_sample_retained(
     :return: Details of the created sample
     """
     new_sample = sample.create_sample(
-        db, sample=sample, SampleModel=models.SampleRetained
+        db, sample=sample_detail, SampleModel=models.SampleRetained
     )
     return [new_sample]
 
@@ -86,6 +86,7 @@ def get_retained_samples_for_product(
     "/{id}",
     response_model=schemas.SampleUpdate,
     description="Update a retained sample by ID",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def update_retained_sample(
     id: str, updated_sample: schemas.SampleUpdate, db: Session = Depends(get_db)
@@ -110,6 +111,7 @@ def update_retained_sample(
     "/{id}",
     response_model=schemas.Sample,
     description="Delete a retained sample by ID",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     """

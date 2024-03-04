@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
+from routes.actions import auth_action
 from schemas import schemas
 
 rack_router = APIRouter(prefix="/rack", tags=["rack"])
@@ -77,7 +78,10 @@ def get_specified_rack(rack_id: str, db: Session = Depends(get_db)):
 
 
 @rack_router.put(
-    "/{rack_id}", response_model=schemas.Rack, description="Update a rack by Id"
+    "/{rack_id}",
+    response_model=schemas.Rack,
+    description="Update a rack by Id",
+    dependencies=[Depends(auth_action.is_admin)],
 )
 def update_rack_by_id(
     rack_id: str, rack: schemas.RackCreate, db: Session = Depends(get_db)
@@ -107,9 +111,12 @@ def update_rack_by_id(
 
 
 @rack_router.delete(
-    "/{rack_id}", response_model=schemas.Rack, description="Delete a rack by Id"
+    "/{rack_id}",
+    response_model=schemas.Rack,
+    description="Delete a rack by Id",
+    dependencies=[Depends(auth_action.is_admin)],
 )
-def delete_product_by_id(rack_id: str, db: Session = Depends(get_db)):
+def delete_rack_by_id(rack_id: str, db: Session = Depends(get_db)):
     """
     Delete an existing product by Id.
 

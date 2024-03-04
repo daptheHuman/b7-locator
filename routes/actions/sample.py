@@ -100,7 +100,7 @@ def create_sample(
     destroy_date = add_years_and_months(expiration_date, 1, 1)
 
     if sample.rack_id:
-        rack = get_rack_by_id(sample.rack_id)
+        rack = get_rack_by_id(db, sample.rack_id)
         if rack.max_stored > len(rack.retained_sample):  # Check if capacity available
             new_sample = SampleModel(
                 product_code=sample.product_code,

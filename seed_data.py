@@ -13,7 +13,6 @@ def seed_data(json_file, model):
         data = json.load(file)
 
     # Seed data
-    # Seed data
     for item in data:
         obj = model(**item)
         session.add(obj)
