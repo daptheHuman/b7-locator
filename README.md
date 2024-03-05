@@ -55,3 +55,8 @@ python app.py
 
 The API will now be accessible at the specified endpoints, and you can use the provided API documentation (`/docs`) to explore and interact with the endpoints.
 
+
+## SQLAlchemy ORM
+This project utilizes SQLAlchemy ORM (Object-Relational Mapping) for interacting with the MySQL database. SQLAlchemy provides a powerful and flexible way to work with relational databases in Python, allowing you to define database models using Python classes and interact with them using high-level Python objects. The models directory contains the SQLAlchemy model definitions for the database tables, allowing you to define the structure of your database schema using Python code.
+
+You can find the official documentation for SQLAlchemy ORM [here](https://docs.sqlalchemy.org/en/21/orm/index.html). This documentation provides comprehensive information on how to use SQLAlchemy ORM to define models, interact with databases, perform queries, and more. It includes detailed explanations, code examples, and references to help you understand and use SQLAlchemy effectively in your projects.
