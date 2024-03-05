@@ -1,8 +1,11 @@
+import os
+
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-engine = create_engine(
-    "mysql+pymysql://root:@localhost:3306/b7_locator",
-)
+load_dotenv()
+
+engine = create_engine(os.getenv("DATABASE_URL"))
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

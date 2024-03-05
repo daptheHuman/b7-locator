@@ -1,6 +1,8 @@
+import os
 from contextlib import asynccontextmanager
 
 import uvicorn
+from dotenv import load_dotenv
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.params import Depends
@@ -17,6 +19,8 @@ from routes.rack import rack_router
 from routes.sample_reference import reference_router
 from routes.sample_retained import retained_router
 from routes.stats import stats_router
+
+load_dotenv()
 
 
 @asynccontextmanager
@@ -36,9 +40,7 @@ app = FastAPI(
     version="0.0.1",
 )
 
-origins = [
-    "http://localhost:3030",
-]
+origins = os.getenv("ALLOWED_ORIGINS").split(",")
 
 app.add_middleware(
     CORSMiddleware,
