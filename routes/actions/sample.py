@@ -237,9 +237,9 @@ def create_destroy_reports(
                 sample.weight = item.weight
                 break  # Break once the product_code is found
 
-    pdf, file_path = generate_destroy_report(samples=merged_samples, date=report_date)
-    headers = {
-        "Content-Disposition": f"attachment; filename={SampleModel.__tablename__}-{file_path}"
-    }
+    pdf, file_path = generate_destroy_report(
+        samples=merged_samples, date=report_date, SampleModel=SampleModel
+    )
+    headers = {"Content-Disposition": f"attachment; filename={file_path}"}
 
     return pdf, headers

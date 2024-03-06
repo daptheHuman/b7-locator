@@ -3,6 +3,7 @@ from typing import List, Literal
 
 from fpdf import FPDF, Align, FontFace
 
+from models import models
 from schemas import schemas
 
 COLUMN_WIDTHS = (3.5, 20, 8, 11, 11, 9, 9, 7, 7)
@@ -74,8 +75,16 @@ class PDF(FPDF):
 
 
 def generate_destroy_report(
-    samples: List[schemas.DestructObject], date: date, page: int = 1
+    samples: List[schemas.DestructObject],
+    date: date,
+    SampleModel: models.SampleReferenced | models.SampleRetained,
+    page: int = 1,
 ):
+    header = (
+        "Retained Sampel"
+        if SampleModel.__tablename__ == "samples_retained"
+        else "Referenced Sampel"
+    )
     pdf = PDF(orientation="landscape", format="A4")
     pdf.add_page()
 
@@ -88,7 +97,7 @@ def generate_destroy_report(
         headers = table.row()
         headers.cell(img=B7_LOGO, colspan=2, padding=3)
         headers.cell(
-            "Form Pemusnahan Retained Sampel Finished Goods",
+            f"Form Pemusnahan {header} Finished Goods",
             colspan=7,
             style=FontFace(size_pt=16),
         )
@@ -134,7 +143,9 @@ def generate_destroy_report(
 
     # Save PDF to a file
     pdf.finished = True
-    pdf_file_path = f"destroy-report_{date.strftime('%Y-%b-%d')}.pdf"
+    pdf_file_path = (
+        f"{SampleModel.__tablename__}_destroy-report_{date.strftime('%Y-%b-%d')}.pdf"
+    )
     # pdf.output(pdf_file_path)
 
     return pdf, pdf_file_path
