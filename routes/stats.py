@@ -37,3 +37,9 @@ def get_retained_count(db: Session = Depends(get_db)):
 def get_audit_count(db: Session = Depends(get_db)):
     count_result = db.query(models.Audit).count()
     return count_result
+
+
+@stats_router.get("/users/count", response_model=int)
+def get_users_count(db: Session = Depends(get_db)):
+    count_result = db.query(models.User).count()
+    return count_result

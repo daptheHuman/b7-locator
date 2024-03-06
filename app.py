@@ -19,6 +19,7 @@ from routes.rack import rack_router
 from routes.sample_reference import reference_router
 from routes.sample_retained import retained_router
 from routes.stats import stats_router
+from routes.user import users_router
 
 load_dotenv()
 
@@ -87,6 +88,7 @@ async def store_audit_middleware(
 
 PROTECTED = [Depends(auth_action.get_current_user), Depends(db_session_middleware)]
 app.include_router(auth_router)
+app.include_router(users_router, dependencies=PROTECTED)
 app.include_router(audit_router, dependencies=PROTECTED)
 app.include_router(products_router, dependencies=PROTECTED)
 app.include_router(retained_router, dependencies=PROTECTED)
