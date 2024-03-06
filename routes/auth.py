@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
@@ -9,8 +7,6 @@ from helpers import auth_utils
 from models import models
 from routes.actions import auth_action
 from schemas import auth_schemas as schemas
-
-from . import auth
 
 auth_router = APIRouter(prefix="/authentication", tags=["Authentication"])
 

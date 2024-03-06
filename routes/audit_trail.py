@@ -8,7 +8,9 @@ from models import models
 from routes.actions import audit_action, auth_action
 from schemas import audit_schemas, schemas
 
-audit_router = APIRouter(prefix="/audit", tags=["Audit"])
+audit_router = APIRouter(
+    prefix="/audit", tags=["Audit"], dependencies=[Depends(auth_action.is_admin)]
+)
 
 
 def get_db():
@@ -23,7 +25,6 @@ def get_db():
     "/",
     response_model=List[audit_schemas.AuditOutput],
     description="Get all reference sample",
-    dependencies=[Depends(auth_action.is_admin)],
 )
 def get_audit_log(
     query: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
@@ -42,7 +43,6 @@ def get_audit_log(
     "/",
     response_model=schemas.Sample,
     description="Clear log",
-    dependencies=[Depends(auth_action.is_admin)],
 )
 def clear_all_log(db: Session = Depends(get_db)):
     """
