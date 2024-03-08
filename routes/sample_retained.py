@@ -46,7 +46,10 @@ def create_new_sample_retained(
     description="Get all retained sample",
 )
 def get_retained_samples_for_product(
-    id: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    id: str | None = None,
+    skip: int | None = None,
+    limit: int | None = None,
+    db: Session = Depends(get_db),
 ):
     """
     Retrieve retained samples associated with a specific product, or all retained samples if product_code isn't specified.

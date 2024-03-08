@@ -45,7 +45,10 @@ def create_new_sample_referenced(
     description="Get all reference sample",
 )
 def get_referenced_samples_for_product(
-    id: str = "", skip: int = 0, limit: int = 100, db: Session = Depends(get_db)
+    id: str | None = None,
+    skip: int | None = None,
+    limit: int | None = None,
+    db: Session = Depends(get_db),
 ):
     """
     Retrieve reference samples associated with a specific sample, or all reference samples if product_code isn't specified.
