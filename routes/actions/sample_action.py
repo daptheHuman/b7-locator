@@ -42,39 +42,6 @@ def get_all_sample(
     return samples
 
 
-def get_destroy_by_month_year(
-    db: Session,
-    month: int,
-    year: int,
-    SampleModel: models.SampleReferenced | models.SampleRetained,
-):
-    samples = (
-        db.query(SampleModel)
-        .filter(extract("year", SampleModel.destroy_date) == year)
-        .filter(extract("month", SampleModel.destroy_date) == month)
-        .all()
-    )
-
-    if samples is None:
-        raise HTTPException(status_code=404, detail="No sample found")
-
-    samples = [
-        schemas.SampleProductJoin(
-            id=sample.id,
-            product_code=sample.product_code,
-            batch_number=sample.batch_number,
-            manufacturing_date=sample.manufacturing_date,
-            expiration_date=sample.expiration_date,
-            destroy_date=sample.destroy_date,
-            rack_id=sample.rack_id,
-            product_name=sample.product.product_name,
-            shelf_life=sample.product.shelf_life,
-        )
-        for sample in samples
-    ]
-    return samples
-
-
 def create_sample(
     db: Session,
     sample: schemas.SampleCreate | schemas.Sample,
@@ -189,11 +156,52 @@ def delete_sample(
     return sample_to_delete
 
 
+def get_destroy_by_month_year(
+    db: Session,
+    month: int,
+    year: int,
+    product_type: str,
+    SampleModel: models.SampleReferenced | models.SampleRetained,
+):
+    samples = (
+        db.query(
+            SampleModel,
+        )
+        .join(models.Product)
+        .filter(extract("year", SampleModel.destroy_date) == year)
+        .filter(extract("month", SampleModel.destroy_date) == month)
+        .filter(models.Product.product_type == product_type)
+        .all()
+    )
+
+    if samples is None:
+        raise HTTPException(status_code=404, detail="No sample found")
+
+    samples = [
+        schemas.SampleProductJoin(
+            id=sample.id,
+            product_code=sample.product_code,
+            batch_number=sample.batch_number,
+            manufacturing_date=sample.manufacturing_date,
+            expiration_date=sample.expiration_date,
+            destroy_date=sample.destroy_date,
+            rack_id=sample.rack_id,
+            product_name=sample.product.product_name,
+            product_type=sample.product.product_type,
+            package=sample.product.package,
+            shelf_life=sample.product.shelf_life,
+        )
+        for sample in samples
+    ]
+    return samples
+
+
 def create_destroy_reports(
     db: Session,
     month: int,
     year: int,
-    packageWeight: List[schemas.DestroyPackageAndWeight],
+    product_type: str,
+    packageWeight: List[schemas.DestroySampleWeight],
     SampleModel: models.SampleReferenced | models.SampleRetained,
 ):
     # Retrieve details for each sample
@@ -201,14 +209,18 @@ def create_destroy_reports(
         db.query(
             SampleModel.product_code,
             models.Product.product_name,
+            models.Product.product_type,
+            models.Product.package,
+            models.Product.shelf_life,
             SampleModel.manufacturing_date,
             SampleModel.expiration_date,
             SampleModel.destroy_date,
             func.group_concat(SampleModel.batch_number).label("batch_numbers"),
         )
-        .join(SampleModel.product)  # Join with the Product table
+        .join(models.Product)
         .filter(extract("year", SampleModel.destroy_date) == year)
         .filter(extract("month", SampleModel.destroy_date) == month)
+        .filter(models.Product.product_type == product_type)
         .group_by(SampleModel.product_code)
         .all()
     )
@@ -219,13 +231,15 @@ def create_destroy_reports(
 
     # Convert the results to a dictionary with product_code as keys and merged data as values
     merged_samples = [
-        schemas.DestructObject(
+        schemas.DestroyObject(
             product_code=sample.product_code,
             product_name=sample.product_name,
+            shelf_life=sample.shelf_life,
             manufacturing_date=sample.manufacturing_date,
             expiration_date=sample.expiration_date,
             destroy_date=sample.destroy_date,
             batch_numbers=utils.format_batch_numbers(sample.batch_numbers.split(",")),
+            package=sample.package,
         )
         for sample in samples
     ]
@@ -233,12 +247,14 @@ def create_destroy_reports(
     for item in packageWeight:
         for sample in merged_samples:
             if sample.product_code == item.product_code:
-                sample.package = item.package
                 sample.weight = item.weight
                 break  # Break once the product_code is found
 
     pdf, file_path = generate_destroy_report(
-        samples=merged_samples, date=report_date, SampleModel=SampleModel
+        samples=merged_samples,
+        date=report_date,
+        product_type=product_type,
+        SampleModel=SampleModel,
     )
     headers = {"Content-Disposition": f"attachment; filename={file_path}"}
 

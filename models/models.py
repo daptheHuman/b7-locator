@@ -34,6 +34,9 @@ class Product(Base):
     product_code = Column(String(5), primary_key=True, unique=True, nullable=False)
     product_name = Column(String(255), nullable=False)
     shelf_life = Column(Float, nullable=False)
+    product_type = Column(String(10))
+    package = Column(String(255))
+
     retained_sample = relationship(
         "SampleRetained", back_populates="product", cascade="all, delete-orphan"
     )

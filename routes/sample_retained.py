@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
-from routes.actions import auth_action, sample
+from routes.actions import auth_action, sample_action
 from schemas import schemas
 
 retained_router = APIRouter(prefix="/retained", tags=["retained"])
@@ -34,7 +34,7 @@ def create_new_sample_retained(
     :param db: Database session dependency
     :return: Details of the created sample
     """
-    new_sample = sample.create_sample(
+    new_sample = sample_action.create_sample(
         db, sample=sample_detail, SampleModel=models.SampleRetained
     )
     return [new_sample]
@@ -60,11 +60,11 @@ def get_retained_samples_for_product(
     """
     # Query the database to retrieve retained samples for the specified product
     if id:
-        retained_samples = sample.get_sample_by_id(
+        retained_samples = sample_action.get_sample_by_id(
             db, id, SampleModel=models.SampleRetained
         )
     else:
-        retained_samples = sample.get_all_sample(
+        retained_samples = sample_action.get_all_sample(
             db, skip, limit, SampleModel=models.SampleRetained
         )
     samples = [
@@ -77,6 +77,8 @@ def get_retained_samples_for_product(
             destroy_date=sample.destroy_date,
             rack_id=sample.rack_id if sample.rack_id else "",
             product_name=sample.product.product_name,
+            package=sample.product.package,
+            product_type=sample.product.product_type,
             shelf_life=sample.product.shelf_life,
         )
         for sample in retained_samples
@@ -102,7 +104,7 @@ def update_retained_sample(
     :param db: Database session dependency
     :return: Updated details of the retained sample
     """
-    updated_sample = sample.update_sample(
+    updated_sample = sample_action.update_sample(
         db, id, updated_sample, SampleModel=models.SampleRetained
     )
 
@@ -124,7 +126,9 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     :param db: Database session dependency
     :return: Details of the deleted retained sample
     """
-    deleted_sample = sample.delete_sample(db, id, SampleModel=models.SampleRetained)
+    deleted_sample = sample_action.delete_sample(
+        db, id, SampleModel=models.SampleRetained
+    )
 
     # Return the details of the deleted retained sample
     return deleted_sample
@@ -135,9 +139,9 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     response_model=List[schemas.SampleProductJoin],
     description="Get a product with a specified destroy date",
 )
-def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
-    destroy_samples = sample.get_destroy_by_month_year(
-        db, month, year, SampleModel=models.SampleRetained
+def get_destroy_sample(month: int, year: int, type: str, db: Session = Depends(get_db)):
+    destroy_samples = sample_action.get_destroy_by_month_year(
+        db, month, year, type, SampleModel=models.SampleRetained
     )
     return destroy_samples
 
@@ -148,11 +152,12 @@ def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
 def generate_destroy_reports(
     month: int,
     year: int,
-    package_weight: List[schemas.DestroyPackageAndWeight],
+    package_type: str,
+    package_weight: List[schemas.DestroySampleWeight],
     db: Session = Depends(get_db),
 ):
-    pdf, headers = sample.create_destroy_reports(
-        db, month, year, package_weight, models.SampleRetained
+    pdf, headers = sample_action.create_destroy_reports(
+        db, month, year, package_type, package_weight, models.SampleRetained
     )
 
     return Response(

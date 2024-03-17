@@ -8,6 +8,8 @@ class ProductBase(BaseModel):
     product_name: str
     shelf_life: float
     product_code: str
+    product_type: str
+    package: str
 
 
 class ProductCreate(ProductBase):
@@ -97,22 +99,22 @@ class Rack(RackBase):
         from_attributes = True
 
 
-class DestructReports(BaseModel):
+class DestroyReports(BaseModel):
     samples: List[int]
 
 
-class DestructObject(BaseModel):
+class DestroyObject(BaseModel):
     product_code: str
     product_name: str
     manufacturing_date: date
     expiration_date: date
     destroy_date: date
     batch_numbers: str
+    shelf_life: int
     package: str = ""
     weight: float = 0.0
 
 
-class DestroyPackageAndWeight(BaseModel):
+class DestroySampleWeight(BaseModel):
     product_code: str
-    package: str
     weight: float

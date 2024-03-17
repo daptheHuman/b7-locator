@@ -5,8 +5,8 @@ from sqlalchemy.orm import Session
 
 from config.db import SessionLocal
 from models import models
-from routes.actions import auth_action, sample
-from routes.actions.sample import create_sample
+from routes.actions import auth_action, sample_action
+from routes.actions.sample_action import create_sample
 from schemas import schemas
 
 reference_router = APIRouter(prefix="/reference", tags=["reference"])
@@ -59,9 +59,9 @@ def get_referenced_samples_for_product(
     """
     # Query the database to retrieve reference samples for the specified sample
     if id:
-        samples = sample.get_sample_by_id(db, id, models.SampleReferenced)
+        samples = sample_action.get_sample_by_id(db, id, models.SampleReferenced)
     else:
-        samples = sample.get_all_sample(db, skip, limit, models.SampleReferenced)
+        samples = sample_action.get_all_sample(db, skip, limit, models.SampleReferenced)
 
     samples = [
         schemas.SampleProductJoin(
@@ -73,6 +73,8 @@ def get_referenced_samples_for_product(
             destroy_date=sample.destroy_date,
             rack_id=sample.rack_id if sample.rack_id else "",
             product_name=sample.product.product_name,
+            package=sample.product.package,
+            product_type=sample.product.product_type,
             shelf_life=sample.product.shelf_life,
         )
         for sample in samples
@@ -98,7 +100,7 @@ def update_referenced_sample(
     :param db: Database session dependency
     :return: Updated details of the reference sample
     """
-    updated_sample = sample.update_sample(
+    updated_sample = sample_action.update_sample(
         db, id, updated_sample, SampleModel=models.SampleReferenced
     )
 
@@ -120,7 +122,9 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     :param db: Database session dependency
     :return: Details of the deleted reference sample
     """
-    deleted_sample = sample.delete_sample(db, id, SampleModel=models.SampleReferenced)
+    deleted_sample = sample_action.delete_sample(
+        db, id, SampleModel=models.SampleReferenced
+    )
 
     # Return the details of the deleted reference sample
     return deleted_sample
@@ -131,9 +135,9 @@ def delete_retained_sample(id: str, db: Session = Depends(get_db)):
     response_model=List[schemas.SampleProductJoin],
     description="Get a sample with a specified destroy date",
 )
-def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
-    destroy_samples = sample.get_destroy_by_month_year(
-        db, month, year, SampleModel=models.SampleReferenced
+def get_destroy_sample(month: int, year: int, type: str, db: Session = Depends(get_db)):
+    destroy_samples = sample_action.get_destroy_by_month_year(
+        db, month, year, type, SampleModel=models.SampleReferenced
     )
     return destroy_samples
 
@@ -144,11 +148,12 @@ def get_destroy_sample(month: int, year: int, db: Session = Depends(get_db)):
 def generate_destroy_reports(
     month: int,
     year: int,
-    package_weight: List[schemas.DestroyPackageAndWeight],
+    package_type: str,
+    package_weight: List[schemas.DestroySampleWeight],
     db: Session = Depends(get_db),
 ):
-    pdf, headers = sample.create_destroy_reports(
-        db, month, year, package_weight, models.SampleReferenced
+    pdf, headers = sample_action.create_destroy_reports(
+        db, month, year, package_type, package_weight, models.SampleReferenced
     )
 
     return Response(
